@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   Trash2, Copy, ArrowUp, ArrowDown, Undo2, Redo2, Eye, Pencil, Monitor, Tablet, Smartphone, Download, RotateCcw, Layers,
   Upload, Sparkles, LayoutGrid, Palette, Maximize2, FileText, ChevronDown, Plus, Code2, History, Megaphone, Inbox, FolderTree, Cloud,
-  BarChart3, BookOpen, ShieldCheck, Webhook, Mic, Rocket, Kanban,
+  BarChart3, BookOpen, ShieldCheck, Webhook, Mic, Rocket, Kanban, Command,
 } from "lucide-react";
 import { RenderNode } from "./Canvas";
 import { Inspector } from "./Inspector";
@@ -17,6 +17,7 @@ import { CollabPwaWebhookModal } from "./CollabPwaWebhookModal";
 import { AiVoiceBrandChatModal } from "./AiVoiceBrandChatModal";
 import { DeployMarketingWcagModal } from "./DeployMarketingWcagModal";
 import { CrmKanbanPopupModal } from "./CrmKanbanPopupModal";
+import { VisionChartCursorCommandModal } from "./VisionChartCursorCommandModal";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { FloatingToolbar } from "./FloatingToolbar";
@@ -111,6 +112,22 @@ export function Builder() {
   const [voiceBrandModalOpen, setVoiceBrandModalOpen] = useState(false);
   const [deployMarketingModalOpen, setDeployMarketingModalOpen] = useState(false);
   const [crmKanbanModalOpen, setCrmKanbanModalOpen] = useState(false);
+  const [commandVisionModalOpen, setCommandVisionModalOpen] = useState(false);
+  const [cursorMode, setCursorMode] = useState<"none" | "neon" | "spotlight">("none");
+  const [cursorCoords, setCursorCoords] = useState({ x: -100, y: -100 });
+  const [isRtl, setIsRtl] = useState(false);
+
+  // Global Ctrl+K / Cmd+K Command Palette Shortcut
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandVisionModalOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   // Global Styling state
   const [currentFont, setCurrentFont] = useState("'Inter', system-ui, sans-serif");
@@ -767,6 +784,16 @@ export function Builder() {
             <Kanban size={16} />
           </button>
 
+          {/* Command Palette (Ctrl+K), AI Wireframe Vision, Charts, RTL & Gallery Hub */}
+          <button
+            className={`ibtn ${commandVisionModalOpen ? "ibtn-on" : ""}`}
+            title="Command Palette (Ctrl+K), AI Wireframe-to-Website, Visual Charts, Custom Cursor & RTL"
+            onClick={() => setCommandVisionModalOpen(true)}
+            style={{ color: "#f97316" }}
+          >
+            <Command size={16} />
+          </button>
+
           {/* Live Fullscreen View */}
           <button
             className="ibtn"
@@ -807,8 +834,41 @@ export function Builder() {
 
       <div className="bld-body">
         {/* Main Canvas Stage */}
-        <main className="bld-stage" onClick={() => select(null)}>
-          <div className="bld-frame" style={{ width: DEVICES[device] }}>
+        <main
+          className="bld-stage relative"
+          onClick={() => select(null)}
+          onMouseMove={(e) => {
+            if (cursorMode !== "none") {
+              setCursorCoords({ x: e.clientX, y: e.clientY });
+            }
+          }}
+        >
+          {cursorMode !== "none" && (
+            <div
+              style={{
+                position: "fixed",
+                left: cursorCoords.x,
+                top: cursorCoords.y,
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+                zIndex: 45,
+                width: cursorMode === "spotlight" ? "180px" : "36px",
+                height: cursorMode === "spotlight" ? "180px" : "36px",
+                borderRadius: "999px",
+                border: cursorMode === "neon" ? "2px solid #f97316" : "none",
+                boxShadow:
+                  cursorMode === "neon"
+                    ? "0 0 24px rgba(249, 115, 22, 0.85)"
+                    : "none",
+                background:
+                  cursorMode === "spotlight"
+                    ? "radial-gradient(circle, rgba(249, 115, 22, 0.22) 0%, transparent 70%)"
+                    : "rgba(249, 115, 22, 0.08)",
+                transition: "width 0.15s ease, height 0.15s ease",
+              }}
+            />
+          )}
+          <div className="bld-frame" dir={isRtl ? "rtl" : "ltr"} style={{ width: DEVICES[device] }}>
             <RenderNode
               node={page}
               selected={selected}
@@ -909,8 +969,28 @@ export function Builder() {
           onOpenVoiceBrandChat={() => setVoiceBrandModalOpen(true)}
           onOpenDeployMarketing={() => setDeployMarketingModalOpen(true)}
           onOpenCrmKanban={() => setCrmKanbanModalOpen(true)}
+          onOpenCommandVision={() => setCommandVisionModalOpen(true)}
         />
       )}
+
+      {/* Command Palette (Ctrl+K), AI Wireframe Vision, Charts, Custom Cursor & RTL Modal */}
+      <VisionChartCursorCommandModal
+        isOpen={commandVisionModalOpen}
+        onClose={() => setCommandVisionModalOpen(false)}
+        onInsertNode={(newNode) => {
+          commit({ ...page, children: [...(page.children ?? []), newNode] });
+          select(newNode.id);
+        }}
+        cursorMode={cursorMode}
+        onChangeCursorMode={setCursorMode}
+        isRtl={isRtl}
+        onToggleRtl={() => setIsRtl((v) => !v)}
+        onApplyHeroBgEffect={(effect) => {
+          const targetId = selected && selected !== "root" ? selected : page.children?.[0]?.id || "root";
+          update(targetId, { bgEffect: effect });
+        }}
+        onOpenCodeExport={() => setCodeModalOpen(true)}
+      />
 
       {/* Visual CRM Kanban Pipeline, Exit-Intent Popup & 3D Interactive Blocks Modal */}
       <CrmKanbanPopupModal

@@ -36,6 +36,11 @@ import {
   Kanban,
   Calendar,
   SplitSquareHorizontal,
+  Command,
+  Globe,
+  FileText,
+  Code2,
+  Menu,
 } from "lucide-react";
 import type { NodeType } from "./types";
 
@@ -60,6 +65,7 @@ interface FloatingToolbarProps {
   onOpenVoiceBrandChat?: () => void;
   onOpenDeployMarketing?: () => void;
   onOpenCrmKanban?: () => void;
+  onOpenCommandVision?: () => void;
 }
 
 export function FloatingToolbar({
@@ -83,6 +89,7 @@ export function FloatingToolbar({
   onOpenVoiceBrandChat,
   onOpenDeployMarketing,
   onOpenCrmKanban,
+  onOpenCommandVision,
 }: FloatingToolbarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -106,10 +113,19 @@ export function FloatingToolbar({
   const elementsList: { type: NodeType; label: string; icon: React.ElementType }[] = [
     { type: "section", label: "Section", icon: Square },
     { type: "container", label: "Row / Box", icon: Columns3 },
+    { type: "smartNavbar", label: "Sticky Navbar", icon: Menu },
     { type: "heading", label: "Heading", icon: Heading },
     { type: "text", label: "Paragraph", icon: AlignLeft },
     { type: "button", label: "Button", icon: MousePointerClick },
     { type: "image", label: "Image", icon: ImageIcon },
+    { type: "dataChart", label: "Visual Charts", icon: BarChart3 },
+    { type: "directoryGrid", label: "Search Directory", icon: LayoutGrid },
+    { type: "apiTable", label: "REST API Table", icon: Code2 },
+    { type: "langSwitcher", label: "Language & RTL Bar", icon: Globe },
+    { type: "masonryGallery", label: "Masonry Lightbox", icon: ImageIcon },
+    { type: "pdfViewer", label: "PDF Brochure Viewer", icon: FileText },
+    { type: "imageHotspot", label: "Image Hotspot (+)", icon: Sparkles },
+    { type: "customEmbed", label: "HTML/Iframe Embed", icon: Code2 },
     { type: "blog", label: "Blog & CMS Grid", icon: BookOpen },
     { type: "aiChatbot", label: "AI Support Chatbot", icon: Bot },
     { type: "beforeAfter", label: "Before/After Slider", icon: SplitSquareHorizontal },
@@ -372,6 +388,23 @@ export function FloatingToolbar({
                   <span>CRM Kanban, Exit Popup & 3D Blocks</span>
                 </div>
                 <span className="text-[10px] font-mono text-emerald-400">CRM</span>
+              </button>
+            )}
+
+            {onOpenCommandVision && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenCommandVision();
+                  setShowMoreMenu(false);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-stone-200 hover:bg-stone-800/80 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Command size={14} className="text-orange-400" />
+                  <span>Ctrl+K, AI Sketch Vision, Charts & RTL</span>
+                </div>
+                <span className="text-[10px] font-mono text-orange-400">Ctrl+K</span>
               </button>
             )}
           </div>

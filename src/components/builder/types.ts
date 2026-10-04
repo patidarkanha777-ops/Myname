@@ -26,7 +26,16 @@ export type NodeType =
   | "beforeAfter"
   | "marquee"
   | "tiltCard"
-  | "bookingCalendar";
+  | "bookingCalendar"
+  | "dataChart"
+  | "directoryGrid"
+  | "apiTable"
+  | "smartNavbar"
+  | "langSwitcher"
+  | "masonryGallery"
+  | "pdfViewer"
+  | "imageHotspot"
+  | "customEmbed";
 
 export interface FaqItem {
   q: string;
@@ -90,6 +99,20 @@ export interface BNode {
   popupDelaySeconds?: number;
   // Multi-Step Appointment Calendar Slots
   bookingSlots?: string[];
+  // Live Data Charts, Directory & REST API Table properties
+  chartType?: "bar" | "line" | "donut";
+  chartData?: { label: string; value: number }[];
+  directoryCategory?: "jobs" | "realestate" | "tools";
+  apiUrl?: string;
+  // Smart Sticky Navbar properties
+  navBrand?: string;
+  navLinks?: string[];
+  navCta?: string;
+  // Animated Background Effect
+  bgEffect?: "none" | "aurora" | "starfield" | "cyber-grid";
+  // PDF Viewer & Custom Embed properties
+  pdfUrl?: string;
+  embedCode?: string;
   // Built-in Image Editor & Filter Studio properties
   imageBrightness?: number;
   imageContrast?: number;
@@ -340,6 +363,85 @@ export function createNode(type: NodeType): BNode {
         bookingSlots: ["10:00 AM", "11:30 AM", "02:30 PM", "04:00 PM", "05:30 PM"],
         style: { width: "100%", maxWidth: "640px", padding: "32px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
       };
+    case "dataChart":
+      return {
+        id,
+        type,
+        text: "Annual Revenue & Conversion Growth",
+        chartType: "bar",
+        chartData: [
+          { label: "Jan", value: 42 },
+          { label: "Feb", value: 58 },
+          { label: "Mar", value: 74 },
+          { label: "Apr", value: 65 },
+          { label: "May", value: 89 },
+          { label: "Jun", value: 96 },
+        ],
+        style: { width: "100%", maxWidth: "780px", padding: "32px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
+      };
+    case "directoryGrid":
+      return {
+        id,
+        type,
+        text: "Explore Curated Opportunities & Listings",
+        directoryCategory: "jobs",
+        style: { width: "100%", maxWidth: "960px", padding: "32px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
+      };
+    case "apiTable":
+      return {
+        id,
+        type,
+        text: "Live External REST API Data Explorer",
+        apiUrl: "/api/cms/items",
+        style: { width: "100%", maxWidth: "920px", padding: "28px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
+      };
+    case "smartNavbar":
+      return {
+        id,
+        type,
+        navBrand: "CANVAS.PRO",
+        navLinks: ["Features", "Pricing", "Case Studies", "Docs"],
+        navCta: "Start Free Trial →",
+        style: { width: "100%", padding: "16px 32px", background: "rgba(24, 24, 27, 0.9)", color: "#ffffff", position: "sticky", top: "0", zIndex: "30" },
+      };
+    case "langSwitcher":
+      return {
+        id,
+        type,
+        text: "Global Language & RTL Switcher",
+        style: { padding: "12px 20px", margin: "12px auto", textAlign: "center" },
+      };
+    case "masonryGallery":
+      return {
+        id,
+        type,
+        text: "Filterable Masonry Portfolio & Lightbox Zoom",
+        style: { width: "100%", maxWidth: "980px", padding: "32px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
+      };
+    case "pdfViewer":
+      return {
+        id,
+        type,
+        text: "Interactive Product Brochure & Resume PDF Viewer",
+        pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        style: { width: "100%", maxWidth: "820px", padding: "28px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
+      };
+    case "imageHotspot":
+      return {
+        id,
+        type,
+        text: "Interactive Shop-the-Look Studio Setup (Hover or Click + Pins)",
+        src: "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=1200&auto=format&fit=crop&q=80",
+        style: { width: "100%", maxWidth: "820px", padding: "28px", background: "#18181b", color: "#ffffff", borderRadius: "24px", margin: "16px auto" },
+      };
+    case "customEmbed":
+      return {
+        id,
+        type,
+        text: "Custom HTML / Iframe / Third-Party Widget Embed",
+        embedCode: `<div style="padding:24px;border-radius:16px;background:linear-gradient(135deg,#1e1b4b,#311042);color:#fff;text-align:center;font-family:sans-serif;"><h3 style="margin:0 0 8px;">⚡ Live Custom HTML / Script Embed</h3><p style="margin:0;font-size:13px;opacity:0.85;">Embed Calendly, Typeform, Spotify, YouTube, or custom JavaScript widgets right here.</p></div>`,
+        style: { width: "100%", maxWidth: "760px", padding: "24px", background: "#18181b", color: "#ffffff", borderRadius: "20px", margin: "16px auto" },
+      };
   }
 }
 
@@ -556,5 +658,54 @@ ${renderJsxNode(root, 6)}
     </main>
   );
 }
+`;
+}
+
+export function toWordPressGutenberg(root: BNode): string {
+  const htmlBody = toHTML(root);
+  return `<!-- wp:group {"layout":{"type":"constrained"}} -->
+<div class="wp-block-group">
+  <!-- wp:html -->
+  ${htmlBody}
+  <!-- /wp:html -->
+</div>
+<!-- /wp:group -->`;
+}
+
+export function toVueSfc(root: BNode, customCss = ""): string {
+  return `<script setup lang="ts">
+// Generated by Canvas Visual Website Builder (Vue 3 SFC + Tailwind)
+</script>
+
+<template>
+  <div class="canvas-vue-root">
+    ${toHTML(root)}
+  </div>
+</template>
+
+<style scoped>
+.canvas-vue-root {
+  min-height: 100vh;
+}
+${customCss}
+</style>
+`;
+}
+
+export function toAstroComponent(root: BNode, title = "Canvas Website"): string {
+  return `---
+// Generated by Canvas Visual Website Builder (Astro Component)
+const pageTitle = ${JSON.stringify(title)};
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    ${toHTML(root)}
+  </body>
+</html>
 `;
 }

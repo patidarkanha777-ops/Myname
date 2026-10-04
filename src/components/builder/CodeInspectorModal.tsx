@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { X, Code2, Copy, Check, Terminal, FileCode2, Download, Layers } from "lucide-react";
-import { toHTML, toReactTailwind, toNextJsPage, type BNode } from "./types";
+import {
+  toHTML,
+  toReactTailwind,
+  toNextJsPage,
+  toWordPressGutenberg,
+  toVueSfc,
+  toAstroComponent,
+  type BNode,
+} from "./types";
 
 interface CodeInspectorModalProps {
   isOpen: boolean;
@@ -23,9 +31,9 @@ export function CodeInspectorModal({
   pageTitle = "Canvas Website",
   pageDescription = "Built with Canvas Visual Website Builder",
 }: CodeInspectorModalProps) {
-  const [activeTab, setActiveTab] = useState<"element" | "full" | "react" | "nextjs" | "customCss">(
-    selectedNode ? "element" : "react"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "element" | "full" | "react" | "nextjs" | "vue" | "astro" | "wordpress" | "customCss"
+  >(selectedNode ? "element" : "react");
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -49,6 +57,9 @@ ${toHTML(pageRoot)}
 
   const reactCode = toReactTailwind(selectedNode && activeTab === "element" ? selectedNode : pageRoot, "CanvasPage");
   const nextJsCode = toNextJsPage(pageRoot, pageTitle, pageDescription);
+  const vueCode = toVueSfc(pageRoot, customCss);
+  const astroCode = toAstroComponent(pageRoot, pageTitle);
+  const wpCode = toWordPressGutenberg(pageRoot);
 
   const getActiveCode = () => {
     switch (activeTab) {
@@ -60,6 +71,12 @@ ${toHTML(pageRoot)}
         return reactCode;
       case "nextjs":
         return nextJsCode;
+      case "vue":
+        return vueCode;
+      case "astro":
+        return astroCode;
+      case "wordpress":
+        return wpCode;
       default:
         return customCss;
     }
@@ -78,6 +95,12 @@ ${toHTML(pageRoot)}
         ? "CanvasPage.tsx"
         : activeTab === "nextjs"
         ? "page.tsx"
+        : activeTab === "vue"
+        ? "CanvasPage.vue"
+        : activeTab === "astro"
+        ? "index.astro"
+        : activeTab === "wordpress"
+        ? "wordpress-gutenberg-block.html"
         : activeTab === "customCss"
         ? "styles.css"
         : "index.html";
@@ -146,6 +169,39 @@ ${toHTML(pageRoot)}
             >
               <FileCode2 size={14} />
               Next.js (app/page.tsx)
+            </button>
+            <button
+              onClick={() => setActiveTab("vue")}
+              className={`flex items-center gap-2 py-3 px-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
+                activeTab === "vue"
+                  ? "border-orange-500 text-orange-400 bg-orange-500/5"
+                  : "border-transparent text-stone-400 hover:text-stone-200"
+              }`}
+            >
+              <FileCode2 size={14} />
+              Vue 3 (.vue)
+            </button>
+            <button
+              onClick={() => setActiveTab("astro")}
+              className={`flex items-center gap-2 py-3 px-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
+                activeTab === "astro"
+                  ? "border-orange-500 text-orange-400 bg-orange-500/5"
+                  : "border-transparent text-stone-400 hover:text-stone-200"
+              }`}
+            >
+              <FileCode2 size={14} />
+              Astro (.astro)
+            </button>
+            <button
+              onClick={() => setActiveTab("wordpress")}
+              className={`flex items-center gap-2 py-3 px-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
+                activeTab === "wordpress"
+                  ? "border-orange-500 text-orange-400 bg-orange-500/5"
+                  : "border-transparent text-stone-400 hover:text-stone-200"
+              }`}
+            >
+              <FileCode2 size={14} />
+              WordPress Gutenberg
             </button>
             <button
               onClick={() => setActiveTab("full")}
@@ -229,6 +285,42 @@ ${toHTML(pageRoot)}
               </div>
               <pre className="p-4 bg-[#0a0a0c] border border-stone-800 rounded-xl text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed max-h-[50vh] select-all">
                 {nextJsCode}
+              </pre>
+            </div>
+          )}
+
+          {activeTab === "vue" && (
+            <div>
+              <div className="mb-2 text-[11px] font-mono text-stone-400 flex items-center justify-between">
+                <span>File: CanvasPage.vue (Vue 3 Single File Component)</span>
+                <span className="text-emerald-400">Vue 3 + Nuxt Ready</span>
+              </div>
+              <pre className="p-4 bg-[#0a0a0c] border border-stone-800 rounded-xl text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed max-h-[50vh] select-all">
+                {vueCode}
+              </pre>
+            </div>
+          )}
+
+          {activeTab === "astro" && (
+            <div>
+              <div className="mb-2 text-[11px] font-mono text-stone-400 flex items-center justify-between">
+                <span>File: src/pages/index.astro (Astro Static/SSR Component)</span>
+                <span className="text-orange-400">Zero-JS Astro Ready</span>
+              </div>
+              <pre className="p-4 bg-[#0a0a0c] border border-stone-800 rounded-xl text-xs font-mono text-amber-300 overflow-x-auto leading-relaxed max-h-[50vh] select-all">
+                {astroCode}
+              </pre>
+            </div>
+          )}
+
+          {activeTab === "wordpress" && (
+            <div>
+              <div className="mb-2 text-[11px] font-mono text-stone-400 flex items-center justify-between">
+                <span>Format: WordPress Gutenberg Block & Elementor HTML</span>
+                <span className="text-sky-400">Paste directly in WP Block Editor</span>
+              </div>
+              <pre className="p-4 bg-[#0a0a0c] border border-stone-800 rounded-xl text-xs font-mono text-sky-300 overflow-x-auto leading-relaxed max-h-[50vh] select-all">
+                {wpCode}
               </pre>
             </div>
           )}

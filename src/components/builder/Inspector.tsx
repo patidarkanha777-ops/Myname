@@ -241,6 +241,91 @@ export function Inspector({ node, onChange, onStyle, onOpenAi, onOpenIconStudio 
             </Field>
           </>
         )}
+        {node.type === "dataChart" && (
+          <>
+            <Field label="Chart Title"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+            <Field label="Chart Type">
+              <select
+                className="insp-input"
+                value={node.chartType || "bar"}
+                onChange={(e) => onChange({ chartType: e.target.value as any })}
+              >
+                <option value="bar">Bar Chart</option>
+                <option value="line">Line Graph</option>
+                <option value="donut">Donut Chart</option>
+              </select>
+            </Field>
+          </>
+        )}
+        {node.type === "directoryGrid" && (
+          <Field label="Directory Title"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+        )}
+        {node.type === "apiTable" && (
+          <>
+            <Field label="Table Title"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+            <Field label="REST API URL"><input className="insp-input" value={node.apiUrl || "/api/cms/items"} onChange={(e) => onChange({ apiUrl: e.target.value })} /></Field>
+          </>
+        )}
+        {node.type === "smartNavbar" && (
+          <>
+            <Field label="Brand Name"><input className="insp-input" value={node.navBrand || ""} onChange={(e) => onChange({ navBrand: e.target.value })} /></Field>
+            <Field label="Links (comma-sep)">
+              <input
+                className="insp-input"
+                value={(node.navLinks || ["Features", "Pricing", "Case Studies", "Docs"]).join(", ")}
+                onChange={(e) =>
+                  onChange({
+                    navLinks: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
+                }
+              />
+            </Field>
+            <Field label="CTA Button"><input className="insp-input" value={node.navCta || ""} onChange={(e) => onChange({ navCta: e.target.value })} /></Field>
+          </>
+        )}
+        {node.type === "langSwitcher" && (
+          <Field label="Helper Label"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+        )}
+        {node.type === "masonryGallery" && (
+          <Field label="Gallery Title"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+        )}
+        {node.type === "pdfViewer" && (
+          <>
+            <Field label="Document Title"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+            <Field label="PDF URL"><input className="insp-input" value={node.pdfUrl || ""} onChange={(e) => onChange({ pdfUrl: e.target.value })} /></Field>
+          </>
+        )}
+        {node.type === "imageHotspot" && (
+          <>
+            <Field label="Headline"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+            <Field label="Photo URL"><input className="insp-input" value={node.src || ""} onChange={(e) => onChange({ src: e.target.value })} /></Field>
+          </>
+        )}
+        {node.type === "customEmbed" && (
+          <>
+            <Field label="Embed Title"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>
+            <Field label="HTML / Iframe">
+              <textarea rows={4} className="insp-input font-mono text-[11px]" value={node.embedCode || ""} onChange={(e) => onChange({ embedCode: e.target.value })} />
+            </Field>
+          </>
+        )}
+        {isContainer(node.type) && (
+          <Field label="Animated BG">
+            <select
+              className="insp-input"
+              value={node.bgEffect || "none"}
+              onChange={(e) => onChange({ bgEffect: e.target.value as any })}
+            >
+              <option value="none">None (Standard)</option>
+              <option value="aurora">✨ Aurora Borealis Mesh</option>
+              <option value="starfield">🌌 Starfield Particle Dots</option>
+              <option value="cyber-grid">🕸️ Cyber Matrix Grid</option>
+            </select>
+          </Field>
+        )}
         {node.type === "whatsapp" && (
           <>
             <Field label="Button Text"><input className="insp-input" value={node.text || ""} onChange={(e) => onChange({ text: e.target.value })} /></Field>

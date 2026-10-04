@@ -37,6 +37,14 @@ import {
   Sun,
   Moon,
   BookOpen,
+  BarChart3,
+  Search,
+  RefreshCw,
+  Menu,
+  Languages,
+  Maximize2,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import type { BNode } from "./types";
 import { auth, db, OperationType, handleFirestoreError } from "../../firebase";
@@ -1730,3 +1738,724 @@ export function BookingCalendarWidget({ node }: { node: BNode }) {
     </div>
   );
 }
+
+// 22. Visual Data Charts Block (Bar, Line & Donut Chart)
+export function DataChartWidget({ node }: { node: BNode }) {
+  const [activeChart, setActiveChart] = useState<"bar" | "line" | "donut">(node.chartType || "bar");
+  const data =
+    node.chartData && node.chartData.length > 0
+      ? node.chartData
+      : [
+          { label: "Jan", value: 42 },
+          { label: "Feb", value: 58 },
+          { label: "Mar", value: 74 },
+          { label: "Apr", value: 65 },
+          { label: "May", value: 89 },
+          { label: "Jun", value: 96 },
+        ];
+
+  useEffect(() => {
+    if (node.chartType) setActiveChart(node.chartType);
+  }, [node.chartType]);
+
+  const maxVal = Math.max(...data.map((d) => d.value), 100);
+  const totalVal = data.reduce((s, d) => s + d.value, 0);
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-5 text-left">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+        <div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-orange-400">
+            Interactive Visual Data Analytics Block
+          </span>
+          <h3 className="text-xl font-extrabold text-white mt-0.5">
+            {node.text || "Annual Revenue & Conversion Growth"}
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-black/50 border border-white/10">
+          {(["bar", "line", "donut"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setActiveChart(t)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition ${
+                activeChart === t
+                  ? "bg-orange-600 text-white shadow"
+                  : "text-stone-400 hover:text-white"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeChart === "bar" && (
+        <div className="p-5 rounded-2xl bg-black/40 border border-white/10">
+          <div className="grid grid-cols-6 gap-3 items-end h-48 pt-6">
+            {data.map((item, i) => {
+              const pct = Math.max(12, Math.round((item.value / maxVal) * 100));
+              return (
+                <div key={i} className="flex flex-col items-center gap-2 h-full justify-end group">
+                  <span className="text-[11px] font-mono font-bold text-orange-400">
+                    {item.value}%
+                  </span>
+                  <div
+                    className="w-full max-w-[48px] rounded-t-xl bg-gradient-to-t from-orange-600 to-amber-400 group-hover:from-orange-500 group-hover:to-amber-300 transition-all duration-300 shadow-lg"
+                    style={{ height: `${pct}%` }}
+                  />
+                  <span className="text-xs font-semibold text-stone-300">{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {activeChart === "line" && (
+        <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+          <svg viewBox="0 0 600 180" className="w-full h-44 overflow-visible">
+            <defs>
+              <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f97316" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
+            {(() => {
+              const pts = data.map((d, idx) => {
+                const x = (idx / Math.max(1, data.length - 1)) * 540 + 30;
+                const y = 155 - (d.value / maxVal) * 125;
+                return { x, y, ...d };
+              });
+              const polyPoints = pts.map((p) => `${p.x},${p.y}`).join(" ");
+              const areaPoints = `30,165 ${polyPoints} 570,165`;
+              return (
+                <>
+                  <polygon points={areaPoints} fill="url(#lineGrad)" />
+                  <polyline
+                    fill="none"
+                    stroke="#f97316"
+                    strokeWidth="3.5"
+                    points={polyPoints}
+                  />
+                  {pts.map((p, i) => (
+                    <g key={i}>
+                      <circle cx={p.x} cy={p.y} r="5" fill="#fff" stroke="#ea580c" strokeWidth="3" />
+                      <text x={p.x} y={p.y - 12} textAnchor="middle" fill="#fb923c" fontSize="11" fontWeight="bold">
+                        {p.value}
+                      </text>
+                      <text x={p.x} y={175} textAnchor="middle" fill="#a8a29e" fontSize="11">
+                        {p.label}
+                      </text>
+                    </g>
+                  ))}
+                </>
+              );
+            })()}
+          </svg>
+        </div>
+      )}
+
+      {activeChart === "donut" && (
+        <div className="p-6 rounded-2xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-center justify-around gap-6">
+          <div className="relative w-40 h-40 flex items-center justify-center">
+            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#27272a" strokeWidth="3.8" />
+              <circle
+                cx="18"
+                cy="18"
+                r="15.9"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="3.8"
+                strokeDasharray="68 32"
+              />
+              <circle
+                cx="18"
+                cy="18"
+                r="15.9"
+                fill="none"
+                stroke="#38bdf8"
+                strokeWidth="3.8"
+                strokeDasharray="22 78"
+                strokeDashoffset="-68"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span className="text-xl font-extrabold text-white">{totalVal}</span>
+              <span className="text-[10px] text-stone-400 uppercase">Total Score</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            {data.map((d, i) => (
+              <div key={i} className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-4">
+                <span className="text-stone-300 font-medium">{d.label}</span>
+                <span className="font-mono font-bold text-orange-400">{d.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 23. Searchable Directory / Job Board / Real-Estate Grid Block
+const DIRECTORY_ITEMS = [
+  { id: 1, title: "Senior Full-Stack AI Engineer", cat: "Remote Jobs", location: "San Francisco / Remote", price: "$165k – $210k", tag: "Hiring Now" },
+  { id: 2, title: "Lead Product Designer (Design Systems)", cat: "Remote Jobs", location: "London / Remote", price: "$130k – $160k", tag: "Featured" },
+  { id: 3, title: "Luxury Sea-View Penthouse Suite", cat: "Real Estate", location: "Mumbai • Bandra West", price: "₹8.5 Cr", tag: "Verified Property" },
+  { id: 4, title: "Modern Smart Villa with Private Pool", cat: "Real Estate", location: "Bengaluru • Whitefield", price: "₹4.2 Cr", tag: "Ready to Move" },
+  { id: 5, title: "Canvas Cloud Enterprise Analytics", cat: "SaaS Tools", location: "Cloud SaaS Platform", price: "$49 / month", tag: "Top Rated" },
+  { id: 6, title: "Automated CRM & Webhook Engine", cat: "SaaS Tools", location: "API & Automation", price: "$29 / month", tag: "Popular" },
+];
+
+export function DirectoryGridWidget({ node }: { node: BNode }) {
+  const [search, setSearch] = useState("");
+  const [activeCat, setActiveCat] = useState("All");
+
+  const categories = ["All", "Remote Jobs", "Real Estate", "SaaS Tools"];
+  const filtered = DIRECTORY_ITEMS.filter((item) => {
+    const matchesCat = activeCat === "All" || item.cat === activeCat;
+    const matchesQuery =
+      item.title.toLowerCase().includes(search.toLowerCase()) ||
+      item.location.toLowerCase().includes(search.toLowerCase());
+    return matchesCat && matchesQuery;
+  });
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-5 text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-orange-400">
+            Searchable Directory • Job Board • Real-Estate Grid
+          </span>
+          <h3 className="text-2xl font-extrabold text-white mt-0.5">
+            {node.text || "Explore Curated Opportunities & Listings"}
+          </h3>
+        </div>
+
+        {/* Live Search Input */}
+        <div className="relative w-full sm:w-64">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search listings or city..."
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-black/50 border border-white/15 text-xs text-white placeholder:text-stone-500"
+          />
+        </div>
+      </div>
+
+      {/* Category Filter Buttons */}
+      <div className="flex flex-wrap gap-1.5">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setActiveCat(cat)}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+              activeCat === cat
+                ? "bg-orange-600 text-white shadow"
+                : "bg-white/5 text-stone-300 hover:bg-white/10"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filtered.map((item) => (
+          <div
+            key={item.id}
+            className="p-5 rounded-2xl bg-black/40 border border-white/10 hover:border-orange-500/40 transition flex flex-col justify-between gap-3"
+          >
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-stone-400">
+                <span>{item.cat} · {item.location}</span>
+                <span className="text-orange-400 font-semibold">{item.tag}</span>
+              </div>
+              <h4 className="text-base font-bold text-white">{item.title}</h4>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-white/5">
+              <span className="text-sm font-extrabold text-emerald-400 font-mono">{item.price}</span>
+              <button
+                type="button"
+                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-orange-600 text-white text-xs font-bold transition"
+              >
+                View Details →
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 24. External REST API Data Table Block
+export function ApiTableWidget({ node }: { node: BNode }) {
+  const [endpoint, setEndpoint] = useState(node.apiUrl || "/api/cms/items");
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchApiData = async (targetUrl?: string) => {
+    const urlToFetch = targetUrl || endpoint;
+    setLoading(true);
+    try {
+      const res = await fetch(urlToFetch);
+      const data = await res.json();
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.items)
+        ? data.items
+        : Array.isArray(data.leads)
+        ? data.leads
+        : [data];
+      setRows(list.slice(0, 8));
+    } catch {
+      setRows([
+        { id: "api_1", name: "Stripe Webhook Feed", status: "200 OK", latency: "42ms" },
+        { id: "api_2", name: "Inventory Sync Engine", status: "200 OK", latency: "58ms" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchApiData(node.apiUrl || "/api/cms/items");
+  }, [node.apiUrl]);
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-4 text-left">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+        <div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">
+            Live External REST API / JSON Data Table
+          </span>
+          <h3 className="text-lg font-extrabold text-white">
+            {node.text || "Live External REST API Data Explorer"}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value)}
+            placeholder="/api/cms/items"
+            className="px-3 py-1.5 rounded-xl bg-black/50 border border-white/15 text-xs font-mono text-sky-300 w-48"
+          />
+          <button
+            type="button"
+            onClick={() => fetchApiData()}
+            className="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold flex items-center gap-1.5"
+          >
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+            <span>Fetch JSON</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/40">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5 text-stone-300">
+              <th className="py-2.5 px-4 font-bold">ID / Key</th>
+              <th className="py-2.5 px-4 font-bold">Title / Name</th>
+              <th className="py-2.5 px-4 font-bold">Category / Email</th>
+              <th className="py-2.5 px-4 font-bold">Status / Meta</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                <td className="py-2.5 px-4 font-mono text-orange-400">{String(r.id || `#${i + 1}`)}</td>
+                <td className="py-2.5 px-4 font-semibold text-white">{String(r.title || r.name || "API Record")}</td>
+                <td className="py-2.5 px-4 text-stone-300">{String(r.category || r.email || r.collection || "JSON")}</td>
+                <td className="py-2.5 px-4 text-emerald-400 font-mono">{String(r.readTime || r.stage || r.status || "Synced")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// 25. Smart Sticky Header & Mobile Hamburger Menu Block
+export function SmartNavbarWidget({ node }: { node: BNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const brand = node.navBrand || "CANVAS.PRO";
+  const links = node.navLinks && node.navLinks.length > 0 ? node.navLinks : ["Features", "Pricing", "Case Studies", "Docs"];
+  const cta = node.navCta || "Start Free Trial →";
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-orange-600 text-white font-extrabold text-xs flex items-center justify-center shadow">
+            ✦
+          </div>
+          <span className="text-base font-extrabold tracking-tight text-white">{brand}</span>
+        </div>
+
+        {/* Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-6">
+          {links.map((l, idx) => (
+            <a
+              key={idx}
+              href={`#${l.toLowerCase().replace(/\s+/g, "-")}`}
+              onClick={(e) => e.preventDefault()}
+              className="text-xs font-medium text-stone-300 hover:text-white hover:underline underline-offset-4 transition"
+            >
+              {l}
+            </a>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition shadow"
+          >
+            {cta}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition"
+            title="Toggle Mobile Hamburger Menu"
+          >
+            <Menu size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Responsive Hamburger Drawer Preview */}
+      {mobileMenuOpen && (
+        <div className="mt-3 p-4 rounded-2xl bg-stone-900/95 border border-white/15 flex flex-col gap-2.5 text-left">
+          {links.map((l, idx) => (
+            <a
+              key={idx}
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              className="py-1.5 px-2 rounded-lg text-xs font-semibold text-stone-200 hover:bg-white/10"
+            >
+              {l}
+            </a>
+          ))}
+          <button
+            type="button"
+            className="w-full py-2.5 rounded-xl bg-orange-600 text-white text-xs font-bold mt-1"
+          >
+            {cta}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 26. Live Visitor Language Switcher Bar (EN | हिं | ES | FR | AR) & Auto RTL Support
+const LANG_DICT: Record<string, { code: string; label: string; dir: "ltr" | "rtl"; sampleNotice: string }> = {
+  en: { code: "EN", label: "English", dir: "ltr", sampleNotice: "🌐 Viewing site in English (LTR Layout)" },
+  hi: { code: "हिं", label: "हिंदी", dir: "ltr", sampleNotice: "🇮🇳 वेबसाइट अब हिंदी भाषा में दिख रही है (LTR)" },
+  es: { code: "ES", label: "Español", dir: "ltr", sampleNotice: "🇪🇸 Viendo el sitio web en Español (LTR)" },
+  fr: { code: "FR", label: "Français", dir: "ltr", sampleNotice: "🇫🇷 Affichage du site en Français (LTR)" },
+  ar: { code: "AR", label: "العربية (RTL)", dir: "rtl", sampleNotice: "🇸🇦 تم تفعيل وضع اللغة العربية (Right-to-Left RTL Layout)" },
+};
+
+export function LangSwitcherWidget({ node }: { node: BNode }) {
+  const [activeLang, setActiveLang] = useState<string>("en");
+
+  const applyVisitorLanguage = (langKey: string) => {
+    setActiveLang(langKey);
+    const info = LANG_DICT[langKey] || LANG_DICT.en;
+    const frame = document.querySelector(".bld-frame") as HTMLElement | null;
+    const rootSec = frame?.querySelector('[data-builder-node="root"]') as HTMLElement | null;
+    if (rootSec) {
+      rootSec.dir = info.dir;
+    }
+  };
+
+  const current = LANG_DICT[activeLang] || LANG_DICT.en;
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="inline-flex flex-col items-center gap-2">
+      <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-stone-900/95 border border-stone-700 shadow-lg">
+        <Languages size={15} className="text-orange-400 ml-2 mr-1" />
+        {Object.entries(LANG_DICT).map(([k, item]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => applyVisitorLanguage(k)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              activeLang === k
+                ? "bg-orange-600 text-white shadow"
+                : "text-stone-300 hover:text-white hover:bg-stone-800"
+            }`}
+          >
+            {item.code} · {item.label}
+          </button>
+        ))}
+      </div>
+      <span className="text-[11px] text-stone-400">{node.text || current.sampleNotice}</span>
+    </div>
+  );
+}
+
+// 27. Filterable Masonry Portfolio & Lightbox Zoom Gallery
+const MASONRY_PHOTOS = [
+  { id: 1, title: "Spatial OS Interface", cat: "UI/UX", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=900&auto=format&fit=crop&q=80" },
+  { id: 2, title: "Minimalist Luxury Packaging", cat: "Branding", url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&auto=format&fit=crop&q=80" },
+  { id: 3, title: "Architectural Light Study", cat: "Photography", url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=900&auto=format&fit=crop&q=80" },
+  { id: 4, title: "Fintech Mobile Banking App", cat: "UI/UX", url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&auto=format&fit=crop&q=80" },
+  { id: 5, title: "Artisan Coffee Identity", cat: "Branding", url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=900&auto=format&fit=crop&q=80" },
+  { id: 6, title: "Editorial Portrait Series", cat: "Photography", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&auto=format&fit=crop&q=80" },
+];
+
+export function MasonryGalleryWidget({ node }: { node: BNode }) {
+  const [cat, setCat] = useState("All");
+  const [lightboxImg, setLightboxImg] = useState<typeof MASONRY_PHOTOS[0] | null>(null);
+
+  const items = MASONRY_PHOTOS.filter((p) => cat === "All" || p.cat === cat);
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-5 text-left">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+        <div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-orange-400">
+            Filterable Masonry Gallery • Click Photo for Fullscreen Lightbox
+          </span>
+          <h3 className="text-xl font-extrabold text-white">
+            {node.text || "Creative Portfolio & Visual Showcase"}
+          </h3>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {["All", "UI/UX", "Branding", "Photography"].map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCat(c)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                cat === c ? "bg-orange-600 text-white" : "bg-white/5 text-stone-300 hover:bg-white/10"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {items.map((img) => (
+          <div
+            key={img.id}
+            onClick={() => setLightboxImg(img)}
+            className="group relative h-52 rounded-2xl overflow-hidden bg-stone-900 border border-white/10 cursor-pointer"
+          >
+            <img
+              src={img.url}
+              alt={img.title}
+              className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition flex flex-col justify-end p-4">
+              <span className="text-[10px] text-orange-400 font-mono uppercase">{img.cat}</span>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white">{img.title}</h4>
+                <Maximize2 size={14} className="text-white" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {lightboxImg && (
+        <div
+          onClick={() => setLightboxImg(null)}
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-3xl w-full bg-[#18181b] border border-white/15 rounded-2xl overflow-hidden shadow-2xl"
+          >
+            <div className="relative h-[60vh] bg-black">
+              <img src={lightboxImg.url} alt={lightboxImg.title} className="w-full h-full object-contain" />
+              <button
+                type="button"
+                onClick={() => setLightboxImg(null)}
+                className="absolute top-3 right-3 p-2 rounded-full bg-black/70 text-white hover:bg-black"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-4 flex items-center justify-between">
+              <div>
+                <span className="text-xs text-orange-400 font-mono">{lightboxImg.cat}</span>
+                <h4 className="text-base font-bold text-white">{lightboxImg.title}</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLightboxImg(null)}
+                className="px-4 py-2 rounded-xl bg-stone-800 text-xs font-bold text-white"
+              >
+                Close Lightbox
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 28. Interactive Brochure / Resume PDF Embed Viewer Block
+export function PdfViewerWidget({ node }: { node: BNode }) {
+  const [zoom, setZoom] = useState(100);
+  const pdfUrl = node.pdfUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-3 text-left">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-black/40 p-3.5 rounded-xl border border-white/10">
+        <div className="flex items-center gap-2.5">
+          <FileText size={18} className="text-orange-400" />
+          <div>
+            <h4 className="text-sm font-bold text-white">
+              {node.text || "Interactive Product Brochure & Resume PDF Viewer"}
+            </h4>
+            <p className="text-[10px] text-stone-400 font-mono truncate max-w-xs">{pdfUrl}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.max(75, z - 15))}
+            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-white"
+          >
+            -
+          </button>
+          <span className="text-xs font-mono text-stone-300">{zoom}%</span>
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.min(150, z + 15))}
+            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-white"
+          >
+            +
+          </button>
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold flex items-center gap-1"
+          >
+            <ExternalLink size={12} />
+            <span>Open / Download PDF</span>
+          </a>
+        </div>
+      </div>
+
+      <div className="w-full h-96 rounded-2xl overflow-hidden border border-white/15 bg-stone-950">
+        <iframe
+          src={pdfUrl}
+          title="PDF Document Viewer"
+          style={{ width: "100%", height: "100%", transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
+          className="border-none"
+        />
+      </div>
+    </div>
+  );
+}
+
+// 29. Interactive Image Hotspot ("Shop the Look") Block
+const HOTSPOTS = [
+  { id: "hs1", x: 32, y: 42, title: "Studio Pro Display 5K", price: "$1,299", desc: "Anti-reflective nano-texture glass." },
+  { id: "hs2", x: 58, y: 68, title: "Wireless Mechanical Keyboard", price: "$189", desc: "Tactile switches with aluminum frame." },
+  { id: "hs3", x: 76, y: 48, title: "Acoustic Desk Lamp", price: "$129", desc: "Warm ambient LED with Qi charger." },
+];
+
+export function ImageHotspotWidget({ node }: { node: BNode }) {
+  const [activeSpot, setActiveSpot] = useState<string>("hs1");
+  const imgUrl =
+    node.src || "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=1200&auto=format&fit=crop&q=80";
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-3 text-left">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-bold text-white">
+          {node.text || "Interactive Shop-the-Look Studio Setup (Click + Pins)"}
+        </h3>
+        <span className="text-xs text-orange-400 font-mono">3 Interactive Hotspots</span>
+      </div>
+
+      <div className="relative w-full h-96 rounded-2xl overflow-hidden border border-white/15 bg-stone-950">
+        <img src={imgUrl} alt="Shop the Look" className="w-full h-full object-cover" />
+
+        {HOTSPOTS.map((spot) => {
+          const isOpen = activeSpot === spot.id;
+          return (
+            <div
+              key={spot.id}
+              style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+            >
+              <button
+                type="button"
+                onClick={() => setActiveSpot(spot.id)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-xl transition ${
+                  isOpen
+                    ? "bg-orange-600 text-white ring-4 ring-orange-500/40 scale-110"
+                    : "bg-white text-stone-900 hover:scale-110"
+                }`}
+              >
+                <Plus size={15} />
+              </button>
+
+              {isOpen && (
+                <div className="mt-2 w-56 p-3.5 rounded-2xl bg-[#18181b]/95 backdrop-blur-md border border-orange-500/50 shadow-2xl text-left space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-white">{spot.title}</span>
+                    <span className="text-xs font-mono font-bold text-orange-400">{spot.price}</span>
+                  </div>
+                  <p className="text-[11px] text-stone-300 leading-snug">{spot.desc}</p>
+                  <button
+                    type="button"
+                    className="w-full py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-bold mt-1"
+                  >
+                    Shop Item →
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// 30. Custom HTML / Iframe / Third-Party Script Embed Block
+export function CustomEmbedWidget({ node }: { node: BNode }) {
+  const html =
+    node.embedCode ||
+    `<div style="padding:24px;border-radius:16px;background:linear-gradient(135deg,#1e1b4b,#311042);color:#fff;text-align:center;font-family:sans-serif;"><h3 style="margin:0 0 8px;">⚡ Live Custom HTML / Script Embed</h3><p style="margin:0;font-size:13px;opacity:0.85;">Paste Calendly, Typeform, Spotify, YouTube, or custom HTML/JS in the Inspector panel.</p></div>`;
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="w-full space-y-2 text-left">
+      <div className="flex items-center justify-between text-xs text-stone-400">
+        <span className="font-semibold text-white">{node.text || "Custom HTML / Widget Embed"}</span>
+        <span className="font-mono text-[10px] text-orange-400">&lt;embed /&gt;</span>
+      </div>
+      <div
+        className="w-full rounded-2xl overflow-hidden border border-white/10"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
+  );
+}
+

@@ -24,6 +24,15 @@ import {
   MarqueeWidget,
   TiltCardWidget,
   BookingCalendarWidget,
+  DataChartWidget,
+  DirectoryGridWidget,
+  ApiTableWidget,
+  SmartNavbarWidget,
+  LangSwitcherWidget,
+  MasonryGalleryWidget,
+  PdfViewerWidget,
+  ImageHotspotWidget,
+  CustomEmbedWidget,
 } from "./Widgets";
 
 interface Props {
@@ -46,10 +55,19 @@ interface Props {
 const BLOCKS: { type: NodeType; label: string }[] = [
   { type: "section", label: "Section" },
   { type: "container", label: "Row / Box" },
+  { type: "smartNavbar", label: "Smart Sticky Navbar" },
   { type: "heading", label: "Heading" },
   { type: "text", label: "Paragraph" },
   { type: "button", label: "Button" },
   { type: "image", label: "Image" },
+  { type: "dataChart", label: "Visual Charts (Bar/Line/Donut)" },
+  { type: "directoryGrid", label: "Searchable Directory Grid" },
+  { type: "apiTable", label: "External REST API Table" },
+  { type: "langSwitcher", label: "Multi-Language & RTL Bar" },
+  { type: "masonryGallery", label: "Masonry Lightbox Gallery" },
+  { type: "pdfViewer", label: "Brochure / Resume PDF Viewer" },
+  { type: "imageHotspot", label: "Image Hotspot (Shop the Look)" },
+  { type: "customEmbed", label: "Custom HTML / Iframe Embed" },
   { type: "blog", label: "Dynamic Blog & CMS Grid" },
   { type: "aiChatbot", label: "AI Support Chatbot Widget" },
   { type: "beforeAfter", label: "Before / After Image Slider" },
@@ -231,6 +249,19 @@ export function RenderNode({ node, selected, editing, textEditId, onSelect, onSe
     ...(isVariantB && node.abVariantBBg ? { background: node.abVariantBBg, backgroundColor: node.abVariantBBg } : {}),
   };
 
+  if (node.bgEffect === "aurora") {
+    computedStyle.background = "radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.28), transparent 45%), radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.25), transparent 50%), #09090b";
+  } else if (node.bgEffect === "starfield") {
+    computedStyle.backgroundColor = "#09090b";
+    computedStyle.backgroundImage = "radial-gradient(rgba(255,255,255,0.28) 1px, transparent 1px), radial-gradient(rgba(249,115,22,0.35) 1px, transparent 1px)";
+    computedStyle.backgroundSize = "32px 32px, 64px 64px";
+    computedStyle.backgroundPosition = "0 0, 16px 16px";
+  } else if (node.bgEffect === "cyber-grid") {
+    computedStyle.backgroundColor = "#09090b";
+    computedStyle.backgroundImage = "linear-gradient(to right, rgba(249,115,22,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(249,115,22,0.12) 1px, transparent 1px)";
+    computedStyle.backgroundSize = "36px 36px";
+  }
+
   // Image filter & frame styles
   const imgFilterParts: string[] = [];
   if (typeof node.imageBrightness === "number" && node.imageBrightness !== 100) imgFilterParts.push(`brightness(${node.imageBrightness}%)`);
@@ -365,6 +396,15 @@ export function RenderNode({ node, selected, editing, textEditId, onSelect, onSe
     case "marquee": return <>{toolbar}<div {...common}><MarqueeWidget node={node} /></div></>;
     case "tiltCard": return <>{toolbar}<div {...common}><TiltCardWidget node={node} /></div></>;
     case "bookingCalendar": return <>{toolbar}<div {...common}><BookingCalendarWidget node={node} /></div></>;
+    case "dataChart": return <>{toolbar}<div {...common}><DataChartWidget node={node} /></div></>;
+    case "directoryGrid": return <>{toolbar}<div {...common}><DirectoryGridWidget node={node} /></div></>;
+    case "apiTable": return <>{toolbar}<div {...common}><ApiTableWidget node={node} /></div></>;
+    case "smartNavbar": return <>{toolbar}<div {...common}><SmartNavbarWidget node={node} /></div></>;
+    case "langSwitcher": return <>{toolbar}<div {...common}><LangSwitcherWidget node={node} /></div></>;
+    case "masonryGallery": return <>{toolbar}<div {...common}><MasonryGalleryWidget node={node} /></div></>;
+    case "pdfViewer": return <>{toolbar}<div {...common}><PdfViewerWidget node={node} /></div></>;
+    case "imageHotspot": return <>{toolbar}<div {...common}><ImageHotspotWidget node={node} /></div></>;
+    case "customEmbed": return <>{toolbar}<div {...common}><CustomEmbedWidget node={node} /></div></>;
     default:
       return (
         <>
